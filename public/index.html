@@ -1,71 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video Call Meeting</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f4f4f4;
-    }
-    .container {
-      text-align: center;
-    }
-    button {
-      padding: 15px 30px;
-      font-size: 18px;
-      margin: 20px;
-      border: none;
-      cursor: pointer;
-      background-color: #007bff;
-      color: white;
-      border-radius: 5px;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Call Room</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Video Call Meeting</h1>
-    <button id="create-call">Create Call</button>
-    <button id="join-call">Join Call</button>
-  </div>
+    <div class="container">
+        <h1>Video Call Room</h1>
+        <button id="createCall">Create Call</button>
+        <button id="joinCall">Join Call</button>
+    </div>
 
-  <script>
-    // document.getElementById('create-call').addEventListener('click', () => {
-    //   window.location.href = `/create-room`;
-    // });
+    <script>
+        document.getElementById('createCall').addEventListener('click', () => {
+            // Redirect user to a new unique room (create call)
+            window.location.href = `/create-call`;
+        });
 
-    document.getElementById('create-call').addEventListener('click', () => {
-      const password = prompt('Set a password for the meeting:');
-      if (password) {
-        window.location.href = `/create-room`;
-      }
-    });
-  
-    document.getElementById('join-call').addEventListener('click', () => {
-      const roomId = prompt('Enter Meeting ID:');
-      localStorage.setItem("roomId", roomId);
-      const password = prompt('Enter Meeting Password:');
-      if (roomId && password) {
-        window.location.href = `/room/${roomId}`;
-      }
-    });
-
-    // document.getElementById('join-call').addEventListener('click', () => {
-    //   const roomId = prompt('Enter Meeting ID:');
-    //   if (roomId) {
-    //     window.location.href = `/room/${roomId}`;
-    //   }
-    // });
-  </script>
+        document.getElementById('joinCall').addEventListener('click', () => {
+            const roomId = prompt('Enter the Room ID to join:');
+            if (roomId) {
+                // Redirect user to the entered room ID (join call)
+                window.location.href = `/join-call`;
+            }
+        });
+    </script>
 </body>
 </html>

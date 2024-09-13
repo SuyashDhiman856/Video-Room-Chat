@@ -1,66 +1,41 @@
 const express = require('express');
-const path = require("path");
+const path = require("path")
+const { ExpressPeerServer } = require('peer');
 const { v4: uuidV4 } = require('uuid');
 const app = express();
-const server = require('http').Server(app);
-const io = require('socket.io')(server, {cors: {
-  origin: "*",
-  methods: ["GET", "POST"]
-}});
-const { ExpressPeerServer } = require('peer');
-const peerServer = ExpressPeerServer(server, { debug: true });
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+const peerServer = ExpressPeerServer(http, { debug: true });
 
 app.use(express.static('public'));
-app.use('/peerjs', peerServer);
 
-// const cors = require('cors');
-// app.use(cors());
-
-app.set('view engine', 'ejs');
-app.set('views', 'views');
-
-// Serve the homepage for creating or joining a room
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+    res.redirect(`/${uuidV4()}`); // Generate unique room ID and redirect user
 });
 
-// Generate a room ID and redirect to the room page
-app.get('/create-room', (req, res) => {
-  const roomId = uuidV4();
-  console.log('Creating room with ID:', roomId);
-  res.redirect(`/room/${roomId}`);
+app.get('/call/:room', (req, res) => {
+    res.sendFile(__dirname + '/public/room.html'); // Serve the room page
 });
 
-// Serve the room HTML page
-app.get('/room/:room', (req, res) => {
-  // res.sendFile(__dirname + '/public/room.html');
-  const roomId = req.params.room;  // Get the roomId from the URL
-  res.render('room', { roomId }); 
-});
-
-app.get('/script/script', (req, res) => {
-    res.sendFile(path.join(__dirname, '/public/script.js'));
+app.get('/create-call', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/create.html'));
 })
 
-// WebSocket connection setup
+app.get('/join-call', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/join.html'));
+})
+
 io.on('connection', socket => {
-  console.log('New socket connection:', socket.id);
+    socket.on('join-room', (roomId, userId) => {
+        socket.join(roomId);
+        io.to(roomId).emit('user-connected', userId); // Notify all users in the room
 
-  // When a user joins a room
-  socket.on('join-room', (roomId, userId) => {
-    console.log(`User ${userId} joined room ${roomId}`);
-    socket.join(roomId);
-    socket.broadcast.to(roomId).emit('user-connected', userId); // Notify others in the room
-
-    // When user disconnects
-    socket.on('disconnect', () => {
-      console.log(`User ${userId} disconnected from room ${roomId}`);
-      socket.broadcast.to(roomId).emit('user-disconnected', userId); // Notify others of disconnection
+        socket.on('disconnect', () => {
+            io.to(roomId).emit('user-disconnected', userId); // Notify all users in the room
+        });
     });
-  });
 });
 
-// Start the server
-server.listen(3000, () => {
-  console.log('Server is running on port 3000');
+http.listen(3000, () => {
+    console.log('Server is running on port 3000');
 });

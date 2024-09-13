@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Call</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+            width: 250px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Join a Video Call</h1>
+        <input type="text" id="room-id" placeholder="Enter Room ID" required>
+        <input type="text" id="room-name" placeholder="Enter Room Name" required>
+        <input type="text" id="user-name" placeholder="Enter Your Name" required>
+        <button onclick="joinCall()">Join Call</button>
+    </div>
+
+    <script>
+        function joinCall() {
+            const roomId = document.getElementById('room-id').value;
+            const roomName = document.getElementById('room-name').value;
+            const userName = document.getElementById('user-name').value;
+
+            if (roomId && roomName && userName) {
+                localStorage.setItem('room_id', roomId);
+                localStorage.setItem('room_name', roomName);
+                localStorage.setItem('user_name', userName);
+                window.location.href = `/call/${roomId}`; // Redirect to the room page
+            } else {
+                alert('Please enter Room ID, Room Name, and Your Name');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Call</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+            width: 250px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create a Video Call</h1>
+        <input type="text" id="room-name" placeholder="Enter Room Name" required>
+        <input type="text" id="user-name" placeholder="Enter Your Name" required>
+        <button onclick="createCall()">Create Call</button>
+    </div>
+
+    <!-- Include UUID library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+
+    <script>
+        function createCall() {
+            const roomId = uuid.v4(); // Generate UUID
+            const roomName = document.getElementById('room-name').value;
+            const userName = document.getElementById('user-name').value;
+
+            if (roomName && userName) {
+                localStorage.setItem('room_id', roomId);
+                localStorage.setItem('room_name', roomName);
+                localStorage.setItem('user_name', userName);
+                window.location.href = `/call/${roomId}`; // Redirect to the room page
+            } else {
+                alert('Please enter both Room Name and Your Name');
+            }
+        }
+    </script>
+</body>
+</html>

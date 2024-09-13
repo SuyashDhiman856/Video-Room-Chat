@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Call Room</title>
+    <style>
+        #video-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        video {
+            width: 300px;
+            height: 200px;
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-grid">
+        <video id="my-video" autoplay muted></video>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+
+    <script src="https://unpkg.com/peerjs@latest/dist/peerjs.min.js"></script>
+
+    <script>
+        // Retrieve ROOM_ID, ROOM_NAME, and USER_NAME from local storage
+        const ROOM_ID = localStorage.getItem('room_id');
+        const ROOM_NAME = localStorage.getItem('room_name');
+        const USER_NAME = localStorage.getItem('user_name');
+
+        const socket = io(`ws://localhost:3000`); ///chat/${ROOM_ID}
+        const videoGrid = document.getElementById('video-grid');
+        const myVideo = document.getElementById('my-video');
+        myVideo.classList.add(`${USER_NAME}`);
+        const peers = {};
+
+        if (!ROOM_ID || !ROOM_NAME || !USER_NAME) {
+            alert('Missing room information. Please create or join a call.');
+            window.location.href = '/'; // Redirect to the create call page
+        }
+
+        const myPeer = new Peer(undefined, {
+            host: 'localhost',
+            port: 3001,
+            path: '/peerjs',
+            debug: 3
+        });
+
+        // Get local media stream
+        navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+        }).then(stream => {
+            myVideo.srcObject = stream;
+
+            // Answer incoming calls with the local stream
+            myPeer.on('call', call => {
+                call.answer(stream);
+                const video = document.createElement('video');
+                video.autoplay = true;
+                videoGrid.append(video);
+                call.on('stream', userVideoStream => {
+                    video.srcObject = userVideoStream;
+                });
+            });
+
+            // Join the room
+            socket.emit('join-room', ROOM_ID, myPeer.id);
+
+            // Handle new user connections
+            socket.on('user-connected', userId => {
+                connectToNewUser(userId, stream);
+            });
+
+            // Handle user disconnections
+            socket.on('user-disconnected', userId => {
+                if (peers[userId]) peers[userId].close();
+                // Optional: Remove video element if user disconnects
+            });
+        });
+
+        // Connect to a new user
+        function connectToNewUser(userId, stream) {
+            const call = myPeer.call(userId, stream);
+            const video = document.createElement('video');
+            video.autoplay = true;
+            videoGrid.append(video);
+            peers[userId] = call;
+
+            call.on('stream', userVideoStream => {
+                video.srcObject = userVideoStream;
+            });
+
+            call.on('close', () => {
+                video.remove(); // Optional: Clean up the video element when the user disconnects
+            });
+        }
+    </script>
+</body>
+</html>
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Call Room</title>
+    <style>
+        #video-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .video-container {
+            position: relative;
+            display: inline-block;
+        }
+        video {
+            width: 300px;
+            height: 200px;
+            border: 2px solid #000;
+        }
+        .username {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-grid">
+        <div class="video-container">
+            <video id="my-video" autoplay muted></video>
+            <div class="username" id="my-username"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="https://unpkg.com/peerjs@latest/dist/peerjs.min.js"></script>
+
+    <script>
+        const socket = io('ws://localhost:3000');
+        const videoGrid = document.getElementById('video-grid');
+        const myVideo = document.getElementById('my-video');
+        const myUsername = document.getElementById('my-username');
+        const peers = {};
+
+        // Retrieve ROOM_ID, ROOM_NAME, and USER_NAME from local storage
+        const ROOM_ID = localStorage.getItem('room_id');
+        const ROOM_NAME = localStorage.getItem('room_name');
+        const USER_NAME = localStorage.getItem('user_name');
+
+        if (!ROOM_ID || !ROOM_NAME || !USER_NAME) {
+            alert('Missing room information. Please create or join a call.');
+            window.location.href = 'create-call.html'; // Redirect to the create call page
+        }
+
+        const myPeer = new Peer(undefined, {
+            host: 'localhost',
+            port: 3001,
+            path: '/peerjs',
+            debug: 3 // Enable debug logs
+        });
+
+        // Set my username
+        myUsername.textContent = USER_NAME;
+
+        // Get local media stream
+        navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+        }).then(stream => {
+            myVideo.srcObject = stream;
+
+            myPeer.on('call', call => {
+                call.answer(stream);
+                const video = document.createElement('video');
+                video.autoplay = true;
+                const videoContainer = document.createElement('div');
+                videoContainer.classList.add('video-container');
+                videoContainer.appendChild(video);
+                const username = document.createElement('div');
+                username.classList.add('username');
+                videoContainer.appendChild(username);
+                videoGrid.append(videoContainer);
+                call.on('stream', userVideoStream => {
+                    video.srcObject = userVideoStream;
+                });
+                call.on('close', () => {
+                    videoContainer.remove(); // Remove the video container when the user disconnects
+                });
+            });
+
+            // Join the room
+            socket.emit('join-room', ROOM_ID, myPeer.id, USER_NAME);
+
+            // Handle new user connections
+            socket.on('user-connected', ({ userId, userName }) => {
+                console.log(`${userName} joined the room with ID ${ROOM_ID}`);
+                connectToNewUser(userId, stream, userName);
+            });
+
+            // Handle user disconnections
+            socket.on('user-disconnected', userId => {
+                if (peers[userId]) peers[userId].close();
+            });
+        });
+
+        // Connect to a new user
+        function connectToNewUser(userId, stream, userName) {
+            if (peers[userId]) return; // Avoid multiple connections to the same user
+            const call = myPeer.call(userId, stream);
+            const video = document.createElement('video');
+            video.autoplay = true;
+            const videoContainer = document.createElement('div');
+            videoContainer.classList.add('video-container');
+            videoContainer.appendChild(video);
+            const username = document.createElement('div');
+            username.classList.add('username');
+            username.textContent = userName;
+            videoContainer.appendChild(username);
+            videoGrid.append(videoContainer);
+            peers[userId] = call;
+
+            call.on('stream', userVideoStream => {
+                video.srcObject = userVideoStream;
+            });
+
+            call.on('close', () => {
+                videoContainer.remove(); // Remove the video container when the user disconnects
+                delete peers[userId]; // Clean up the peers object
+            });
+        }
+    </script>
+</body>
+</html> -->
