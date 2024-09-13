@@ -94,7 +94,7 @@
             const USER_NAME = localStorage.getItem("user_name");
 
             const socket = io(
-                `wss://e22ed5b9-0b95-4366-8717-f6015b3a1c9c-00-xowmn0pclbv0.sisko.replit.dev:3000`,
+                `wss://video-room-chat.onrender.com`,
             ); ///chat/${ROOM_ID}
             const videoGrid = document.getElementById("video-grid");
             const myVideo = document.getElementById("my-video");
@@ -125,7 +125,7 @@
             }
 
             const myPeer = new Peer(undefined, {
-                host: "527a6333-987e-4c77-bfe9-76f0d25177e5-00-yds41b3rmcxt.pike.replit.dev",
+                host: "https://peer-server-s3zj.onrender.com",
                 path: "/peerjs",
                 debug: 3,
             });
