@@ -1,107 +1,188 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Call Room</title>
-    <style>
-        #video-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        video {
-            width: 300px;
-            height: 200px;
-            border: 2px solid #000;
-        }
-    </style>
-</head>
-<body>
-    <div id="video-grid">
-        <video id="my-video" autoplay muted></video>
-    </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Video Call Room</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous"
+        />
+        <style>
+            #room-id-copy {
+                display: block;
+                margin: 0 auto;
+                border: none;
+                background-color: yellow;
+                color: black;
+                border-radius: 5px;
+            }
+            @media only screen and (min-width: 1000px) {
+                #video-grid {
+                    display: flex;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+                video {
+                    width: 450px;
+                    height: 350px;
+                    border: 2px solid #000;
+                }
+            }
 
-    <script src="/socket.io/socket.io.js"></script>
+            @media only screen and (max-width: 767px) {
+                #video-grid {
+                    display: flex;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+                video {
+                    display: block;
+                    margin: 0 auto;
+                    width: 80%;
+                    border: 2px solid #000;
+                }
+            }
 
+            @media only screen and (max-width: 576px) {
+                #video-grid {
+                    display: flex;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+                video {
+                    display: block;
+                    margin: 0 auto;
+                    width: 90%;
+                    border: 2px solid #000;
+                }
 
-    <script src="https://unpkg.com/peerjs@latest/dist/peerjs.min.js"></script>
+                #my-video {
+                    display: block;
+                    margin: 0 auto;
+                    width: 90%;
+                    border: 2px solid #000;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h3 style="text-align: center" id="room-name"></h3>
+            <h6 style="text-align: center" id="room-id"></h6>
+            <button id="room-id-copy">Copy</button>
+            <div id="video-grid">
+                <div id="video-container">
+                    <video id="my-video" autoplay muted></video>
+                </div>
+            </div>
+        </div>
 
-    <script>
-        // Retrieve ROOM_ID, ROOM_NAME, and USER_NAME from local storage
-        const ROOM_ID = localStorage.getItem('room_id');
-        const ROOM_NAME = localStorage.getItem('room_name');
-        const USER_NAME = localStorage.getItem('user_name');
+        <script src="/socket.io/socket.io.js"></script>
 
-        const socket = io(`ws://localhost:3000`); ///chat/${ROOM_ID}
-        const videoGrid = document.getElementById('video-grid');
-        const myVideo = document.getElementById('my-video');
-        myVideo.classList.add(`${USER_NAME}`);
-        const peers = {};
+        <script src="https://unpkg.com/peerjs@latest/dist/peerjs.min.js"></script>
 
-        if (!ROOM_ID || !ROOM_NAME || !USER_NAME) {
-            alert('Missing room information. Please create or join a call.');
-            window.location.href = '/'; // Redirect to the create call page
-        }
+        <script>
+            // Retrieve ROOM_ID, ROOM_NAME, and USER_NAME from local storage
+            const ROOM_ID = localStorage.getItem("room_id");
+            const ROOM_NAME = localStorage.getItem("room_name");
+            const USER_NAME = localStorage.getItem("user_name");
 
-        const myPeer = new Peer(undefined, {
-            host: 'localhost',
-            port: 3001,
-            path: '/peerjs',
-            debug: 3
-        });
+            const socket = io(
+                `wss://e22ed5b9-0b95-4366-8717-f6015b3a1c9c-00-xowmn0pclbv0.sisko.replit.dev:3000`,
+            ); ///chat/${ROOM_ID}
+            const videoGrid = document.getElementById("video-grid");
+            const myVideo = document.getElementById("my-video");
+            const roomName = document.getElementById("room-name");
+            const copyBtn = document.getElementById("room-id-copy");
+            const roomId = document.getElementById("room-id");
+            roomName.textContent = `Room Name = ${ROOM_NAME}`;
+            roomId.textContent = `Copy Room ID to join people = ${ROOM_ID}`;
+            copyBtn.addEventListener("click", () => {
+                navigator.clipboard
+                    .writeText(ROOM_ID)
+                    .then(() => {
+                        alert("String copied to clipboard!");
+                    })
+                    .catch((err) => {
+                        console.error("Failed to copy string: ", err);
+                    });
+            });
 
-        // Get local media stream
-        navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true
-        }).then(stream => {
-            myVideo.srcObject = stream;
+            myVideo.classList.add(`${USER_NAME}`);
+            const peers = {};
 
-            // Answer incoming calls with the local stream
-            myPeer.on('call', call => {
-                call.answer(stream);
-                const video = document.createElement('video');
+            if (!ROOM_ID || !ROOM_NAME || !USER_NAME) {
+                alert(
+                    "Missing room information. Please create or join a call.",
+                );
+                window.location.href = "/"; // Redirect to the create call page
+            }
+
+            const myPeer = new Peer(undefined, {
+                host: "527a6333-987e-4c77-bfe9-76f0d25177e5-00-yds41b3rmcxt.pike.replit.dev",
+                path: "/peerjs",
+                debug: 3,
+            });
+
+            // Get local media stream
+            navigator.mediaDevices
+                .getUserMedia({
+                    video: true,
+                    audio: true,
+                })
+                .then((stream) => {
+                    myVideo.srcObject = stream;
+
+                    // Answer incoming calls with the local stream
+                    myPeer.on("call", (call) => {
+                        call.answer(stream);
+                        const video = document.createElement("video");
+                        video.autoplay = true;
+                        videoGrid.append(video);
+                        call.on("stream", (userVideoStream) => {
+                            video.srcObject = userVideoStream;
+                        });
+                    });
+
+                    // Join the room
+                    socket.emit("join-room", ROOM_ID, myPeer.id);
+
+                    // Handle new user connections
+                    socket.on("user-connected", (userId) => {
+                        connectToNewUser(userId, stream);
+                    });
+
+                    // Handle user disconnections
+                    socket.on("user-disconnected", (userId) => {
+                        if (peers[userId]) peers[userId].close();
+                        // Optional: Remove video element if user disconnects
+                    });
+                });
+
+            // Connect to a new user
+            function connectToNewUser(userId, stream) {
+                const call = myPeer.call(userId, stream);
+                const video = document.createElement("video");
                 video.autoplay = true;
                 videoGrid.append(video);
-                call.on('stream', userVideoStream => {
+                peers[userId] = call;
+
+                call.on("stream", (userVideoStream) => {
                     video.srcObject = userVideoStream;
                 });
-            });
 
-            // Join the room
-            socket.emit('join-room', ROOM_ID, myPeer.id);
-
-            // Handle new user connections
-            socket.on('user-connected', userId => {
-                connectToNewUser(userId, stream);
-            });
-
-            // Handle user disconnections
-            socket.on('user-disconnected', userId => {
-                if (peers[userId]) peers[userId].close();
-                // Optional: Remove video element if user disconnects
-            });
-        });
-
-        // Connect to a new user
-        function connectToNewUser(userId, stream) {
-            const call = myPeer.call(userId, stream);
-            const video = document.createElement('video');
-            video.autoplay = true;
-            videoGrid.append(video);
-            peers[userId] = call;
-
-            call.on('stream', userVideoStream => {
-                video.srcObject = userVideoStream;
-            });
-
-            call.on('close', () => {
-                video.remove(); // Optional: Clean up the video element when the user disconnects
-            });
-        }
-    </script>
-</body>
+                call.on("close", () => {
+                    video.remove(); // Optional: Clean up the video element when the user disconnects
+                });
+            }
+        </script>
+    </body>
 </html>
 <!--
 <!DOCTYPE html>
