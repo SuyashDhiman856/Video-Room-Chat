@@ -16,10 +16,17 @@ const peerServer = ExpressPeerServer(server, {
   debug: true,
 });
 
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
+
 // Use PeerJS server on '/peerjs' path
 app.use('/peerjs', peerServer);
 
 // Start the server on port 3001
-server.listen(3001, () => {
+server.listen(9000, () => {
   console.log('PeerJS server is running on port 3001');
 });
