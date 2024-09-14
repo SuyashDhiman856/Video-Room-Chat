@@ -11,6 +11,8 @@ const server = http.createServer(app);
 
 // Initialize the PeerJS server with debug enabled
 const peerServer = ExpressPeerServer(server, {
+  path: '/',
+  allow_discovery: true,
   debug: true,
 });
 
